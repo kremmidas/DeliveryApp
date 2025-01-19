@@ -1,4 +1,5 @@
 ﻿using DeliveryApp.Core.ContributorAggregate;
+using DeliveryApp.Core.OrdersAggregate;
 
 namespace DeliveryApp.Infrastructure.Data;
 public class AppDbContext(DbContextOptions<AppDbContext> options,
@@ -6,8 +7,8 @@ public class AppDbContext(DbContextOptions<AppDbContext> options,
 {
   private readonly IDomainEventDispatcher? _dispatcher = dispatcher;
 
-  public DbSet<Contributor> Contributors => Set<Contributor>();
-
+  public DbSet<Order> Orders => Set<Order>();
+  
   protected override void OnModelCreating(ModelBuilder modelBuilder)
   {
     base.OnModelCreating(modelBuilder);
@@ -24,7 +25,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options,
     // dispatch events only if save was successful
     var entitiesWithEvents = ChangeTracker.Entries<HasDomainEventsBase>()
         .Select(e => e.Entity)
-        .Where(e => e.DomainEvents.Any())
+        .Where(e => e.DomainEvents.Count != 0)
         .ToArray();
 
     await _dispatcher.DispatchAndClearEvents(entitiesWithEvents);
@@ -35,3 +36,6 @@ public class AppDbContext(DbContextOptions<AppDbContext> options,
   public override int SaveChanges() =>
         SaveChangesAsync().GetAwaiter().GetResult();
 }
+
+
+
